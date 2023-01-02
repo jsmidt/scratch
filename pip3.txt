@@ -1,0 +1,1 @@
+pip3 install -U numpy scipy pandas ipython jupyterlab matplotlib scikit-learn torch torchvision torchaudio "jax[cpu]" seaborn tqdm flax tensorflow-macos tensorflow-metal optax pytorch_lightning pylint mypy black pydocstyle colorama hypothesis numba pre-commit pytest pytest-env pytest-runner  python-mnist 
