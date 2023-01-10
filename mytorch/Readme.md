@@ -4,13 +4,14 @@ In an attempt to learn Pytorch, good programming practice, and AI concepts, I am
 
 Simple projects I want to solve with this library:
 
-* Makemore by Andrej Karpathy up through GPT
-* Stable Diffusion by Jeremy Howard of FastAI
-* Simple Jax program in their examples
-* Titanic Kaggle problem
-* Housing Kaggle problem
-* MNIST, both traditional and fashion classification problem
-* Run on single or multiple GPUs and/or CPUs
-* Pass basic pylint, mypy, etc... standards
+- [ ] Makemore by Andrej Karpathy up through GPT
+- [ ] Stable Diffusion by Jeremy Howard of FastAI
+- [ ] Simple Jax program in their examples
+- [ ] Titanic Kaggle problem
+- [ ] Housing Kaggle problem
+- [ ] MNIST, both traditional and fashion classification problem
+- [ ] Run on single or multiple GPUs and/or CPUs
+- [ ] Pass basic pylint, mypy, etc... standards
+- [ ] Create test suite
 
 The hope is, if the library becomes mature enough to solve each of the above, it's a pretty stable and I will have met my goals in the first sentence.
