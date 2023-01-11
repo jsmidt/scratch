@@ -36,7 +36,7 @@ class Linear(Module):
 
         self.weight = torch.randn(
             (in_features, out_features))*a/(in_features)**0.5
-        self.bias = torch.randn(out_features) * 0.1
+        self.bias = torch.randn(out_features) * 0.1 if bias else None
 
     def __call__(self, x):
         r"""The 'forward pass' returning y = x @ w.T + b."""
@@ -47,7 +47,7 @@ class Linear(Module):
 
     def parameters(self):
         r"""The parameters to train."""
-        params =  [self.weight] + ([] if self.bias is None else [self.bias])
+        params = [self.weight] + ([] if self.bias is None else [self.bias])
         num_params = sum(p.nelement() for p in params)
         return params, num_params
 
@@ -88,4 +88,127 @@ class Embedding(Module):
         mystr = f"Embedding(num_embeddings={self.num_embeddings}, "
         mystr += f"embedding_dim={self.embedding_dim}), "
         mystr += f"Total parameters: {num_params}"
+        return mystr
+
+
+class Tanh(Module):
+    r"""Applies the Hyperbolic Tangent (Tanh) function element-wise.
+    """
+
+    def __call__(self, x):
+        return torch.tanh(x)
+
+    def parameters(self):
+        params = []
+        num_params = sum(p.nelement() for p in params)
+        return params, num_params
+
+    def __repr__(self):
+        _, num_params = self.parameters()
+        mystr = f"Tanh(), "
+        mystr += f"Total parameters: {num_params}"
+        return mystr
+
+
+class Relu(Module):
+    r"""Applies the rectified linear unit function element-wise:
+    """
+
+    def __call__(self, x):
+        return x * (x > 0).float()
+
+    def parameters(self):
+        params = []
+        num_params = sum(p.nelement() for p in params)
+        return params, num_params
+
+    def __repr__(self):
+        _, num_params = self.parameters()
+        mystr = f"Relu(), "
+        mystr += f"Total parameters: {num_params}"
+        return mystr
+
+
+class Flatten:
+    '''Flattens input by reshaping it into a one-dimensional tensor. '''
+
+    def __call__(self, x):
+        return x.view(-1, x.numel())
+
+    def parameters(self):
+        params = []
+        num_params = sum(p.nelement() for p in params)
+        return params, num_params
+
+    def __repr__(self):
+        _, num_params = self.parameters()
+        mystr = f"Flatten(), "
+        mystr += f"Total parameters: {num_params}"
+        return mystr
+
+
+class BatchNorm1d:
+    '''Applies Batch Normalization over 1D input'''
+
+    def __init__(self, num_features, eps=1e-05, momentum=0.1):
+
+        self.eps = eps
+        self.momentum = momentum
+        self.training = True
+        self.num_features = num_features
+        self.gamma = torch.ones(num_features)
+        self.beta = torch.zeros(num_features)
+        self.running_mean = torch.zeros(num_features)
+        self.running_var = torch.ones(num_features)
+
+    def __call__(self, x):
+        if self.training:
+            xmean = x.mean(0, keepdim=True)
+            xvar = x.var(0, keepdim=True, unbiased=True)
+        else:
+            xmean = self.running_mean
+            xvar = self.running_var
+        xhat = (x - xmean)/torch.sqrt(xvar + self.eps)
+        self.out = self.gamma*xhat + self.beta
+        if self.training:
+            with torch.no_grad():
+                self.running_mean = (1 - self.momentum) * \
+                    self.running_mean + self.momentum*xmean
+                self.running_var = (1 - self.momentum) * \
+                    self.running_var + self.momentum*xvar
+        return self.out
+
+    def parameters(self):
+        params = [self.gamma, self.beta]
+        num_params = sum(p.nelement() for p in params)
+        return params, num_params
+
+    def __repr__(self):
+        _, num_params = self.parameters()
+        mystr = f"Batchnorm1D(num_features={self.num_features}), "
+        mystr += f"Total parameters: {num_params}"
+        return mystr
+
+
+class Sequential(Module):
+    '''An nn model from seuqntial layers. '''
+
+    def __init__(self, layers):
+        self.layers = layers
+
+    def __call__(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        self.out = x
+        return self.out
+
+    def parameters(self):
+        params = [p for layer in self.layers for p in layer.parameters()[0]]
+        num_params = sum(p.nelement() for p in params)
+        return params, num_params
+
+    def __repr__(self):
+        _, num_params = self.parameters()
+        mystr = f"Sequence({self.layers}), "
+        mystr += f"\nModel has total parameters: {num_params}"
         return mystr
