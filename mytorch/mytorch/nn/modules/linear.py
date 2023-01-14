@@ -11,6 +11,9 @@ class Module:
         super().__setattr__('training', True)
         super().__setattr__('_parameters', OrderedDict())
 
+    def forward(self):
+        self()
+
 
 class Linear(Module):
     r"""Linear nn layer with learnable weights w and bias b. 
@@ -36,8 +39,8 @@ class Linear(Module):
             a = 2.0**0.5
 
         self.weight = torch.randn(
-            (in_features, out_features))*a/(in_features)**0.5
-        self.bias = torch.randn(out_features) * 0.1 if bias else None
+            (in_features, out_features),requires_grad = True)*a/(in_features)**0.5
+        self.bias = torch.randn(out_features,requires_grad = True) * 0.1 if bias else None
 
     def __call__(self, x):
         r"""The 'forward pass' returning y = x @ w.T + b."""
@@ -73,7 +76,7 @@ class Embedding(Module):
         super(Embedding, self).__init__()
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
-        self.weight = torch.randn((num_embeddings, embedding_dim))
+        self.weight = torch.randn((num_embeddings, embedding_dim),requires_grad = True)
 
     def __call__(self, IX):
         self.out = self.weight[IX]
@@ -163,8 +166,8 @@ class BatchNorm1d:
         self.momentum = momentum
         self.training = True
         self.num_features = num_features
-        self.gamma = torch.ones(num_features)
-        self.beta = torch.zeros(num_features)
+        self.gamma = torch.ones(num_features,requires_grad = True)
+        self.beta = torch.zeros(num_features,requires_grad = True)
         self.running_mean = torch.zeros(num_features)
         self.running_var = torch.ones(num_features)
 
@@ -228,27 +231,4 @@ class Sequential(Module):
         return mystr
 
 
-class DataModule:  # @save
-    def __init__(self, root='data', num_workers=4, num_train=1000, num_val=1000):
-        self.root = root
-        self.num_workers = num_workers
-        self.num_train = num_train
-        self.num_val = num_val
-
-    def get_dataloader(self, train):
-        if train:
-            indices = list(range(0, self.num_train))
-            # The examples are read in random order
-            random.shuffle(indices)
-        else:
-            indices = list(range(self.num_train, self.num_train+self.num_val))
-        for i in range(0, len(indices), self.batch_size):
-            batch_indices = torch.tensor(indices[i: i+self.batch_size])
-            yield self.X[batch_indices], self.y[batch_indices]
-
-    def train_dataloader(self):
-        return self.get_dataloader(train=True)
-
-    def val_dataloader(self):
-        return self.get_dataloader(train=False)
 
