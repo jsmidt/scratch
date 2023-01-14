@@ -39,8 +39,8 @@ class Linear(Module):
             a = 2.0**0.5
 
         self.weight = torch.randn(
-            (in_features, out_features),requires_grad = True)*a/(in_features)**0.5
-        self.bias = torch.randn(out_features,requires_grad = True) * 0.1 if bias else None
+            (in_features, out_features))*a/(in_features)**0.5
+        self.bias = torch.randn(out_features) * 0.1 if bias else None
 
     def __call__(self, x):
         r"""The 'forward pass' returning y = x @ w.T + b."""
@@ -76,7 +76,7 @@ class Embedding(Module):
         super(Embedding, self).__init__()
         self.num_embeddings = num_embeddings
         self.embedding_dim = embedding_dim
-        self.weight = torch.randn((num_embeddings, embedding_dim),requires_grad = True)
+        self.weight = torch.randn((num_embeddings, embedding_dim))
 
     def __call__(self, IX):
         self.out = self.weight[IX]
@@ -166,8 +166,8 @@ class BatchNorm1d:
         self.momentum = momentum
         self.training = True
         self.num_features = num_features
-        self.gamma = torch.ones(num_features,requires_grad = True)
-        self.beta = torch.zeros(num_features,requires_grad = True)
+        self.gamma = torch.ones(num_features)
+        self.beta = torch.zeros(num_features)
         self.running_mean = torch.zeros(num_features)
         self.running_var = torch.ones(num_features)
 
@@ -215,6 +215,14 @@ class Sequential(Module):
     def parameters(self):
         params = [p for layer in self.layers for p in layer.parameters()]
         return params
+
+    def eval(self):
+        for layer in self.layers:
+            layer.training = False
+    
+    def train(self):
+        for layer in self.layers:
+            layer.training = True
 
     def __repr__(self):
         params = self.parameters()
