@@ -1,5 +1,6 @@
 from collections import OrderedDict, namedtuple
 import torch
+import random
 r"""A personal rewrite of the pytorch.nn model for learning purposes."""
 
 
@@ -48,11 +49,11 @@ class Linear(Module):
     def parameters(self):
         r"""The parameters to train."""
         params = [self.weight] + ([] if self.bias is None else [self.bias])
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
         mystr = f"Linear(in_features={self.in_features}, "
         mystr += f"out_features={self.out_features}, bias={self.bbias}), "
         mystr += f"Total parameters: {num_params}"
@@ -80,11 +81,11 @@ class Embedding(Module):
 
     def parameters(self):
         params = [self.weight]
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
         mystr = f"Embedding(num_embeddings={self.num_embeddings}, "
         mystr += f"embedding_dim={self.embedding_dim}), "
         mystr += f"Total parameters: {num_params}"
@@ -100,11 +101,11 @@ class Tanh(Module):
 
     def parameters(self):
         params = []
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
         mystr = f"Tanh(), "
         mystr += f"Total parameters: {num_params}"
         return mystr
@@ -119,11 +120,11 @@ class Relu(Module):
 
     def parameters(self):
         params = []
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
         mystr = f"Relu(), "
         mystr += f"Total parameters: {num_params}"
         return mystr
@@ -132,16 +133,22 @@ class Relu(Module):
 class Flatten:
     '''Flattens input by reshaping it into a one-dimensional tensor. '''
 
+    def __init__(self, start_dim: int = 1, end_dim: int = -1):
+        self.start_dim = start_dim
+        self.end_dim = end_dim
+
     def __call__(self, x):
-        return x.view(-1, x.numel())
+        # self.out = x.view(x.shape[0], -1)
+        # return x.view(-1, x.numel())
+        return x.flatten(self.start_dim, self.end_dim)
 
     def parameters(self):
         params = []
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
         mystr = f"Flatten(), "
         mystr += f"Total parameters: {num_params}"
         return mystr
@@ -180,11 +187,11 @@ class BatchNorm1d:
 
     def parameters(self):
         params = [self.gamma, self.beta]
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
         mystr = f"Batchnorm1D(num_features={self.num_features}), "
         mystr += f"Total parameters: {num_params}"
         return mystr
@@ -203,12 +210,45 @@ class Sequential(Module):
         return self.out
 
     def parameters(self):
-        params = [p for layer in self.layers for p in layer.parameters()[0]]
-        num_params = sum(p.nelement() for p in params)
-        return params, num_params
+        params = [p for layer in self.layers for p in layer.parameters()]
+        return params
 
     def __repr__(self):
-        _, num_params = self.parameters()
-        mystr = f"Sequence({self.layers}), "
-        mystr += f"\nModel has total parameters: {num_params}"
+        params = self.parameters()
+        num_params = sum(p.nelement() for p in params)
+
+        # Name of model
+        mystr = f"{self.__class__.__name__}("
+        # List each layer
+        for i, layer in enumerate(self.layers):
+            mystr += f"\n  ({i}): {layer}, "
+        mystr += f"\n)"
+        # Print total parameters of model
+        mystr += f"\nTotal parameters: {num_params}"
         return mystr
+
+
+class DataModule:  # @save
+    def __init__(self, root='data', num_workers=4, num_train=1000, num_val=1000):
+        self.root = root
+        self.num_workers = num_workers
+        self.num_train = num_train
+        self.num_val = num_val
+
+    def get_dataloader(self, train):
+        if train:
+            indices = list(range(0, self.num_train))
+            # The examples are read in random order
+            random.shuffle(indices)
+        else:
+            indices = list(range(self.num_train, self.num_train+self.num_val))
+        for i in range(0, len(indices), self.batch_size):
+            batch_indices = torch.tensor(indices[i: i+self.batch_size])
+            yield self.X[batch_indices], self.y[batch_indices]
+
+    def train_dataloader(self):
+        return self.get_dataloader(train=True)
+
+    def val_dataloader(self):
+        return self.get_dataloader(train=False)
+
