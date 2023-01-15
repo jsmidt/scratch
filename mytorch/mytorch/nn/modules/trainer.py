@@ -14,7 +14,7 @@ class Trainer:
     def configure_optimizers(self):
         raise NotImplementedError
 
-    def eval(self, features):
+    def predict(self, features):
         self.model.eval()
         return self.model(features)
 
