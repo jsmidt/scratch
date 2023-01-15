@@ -131,3 +131,6 @@ dmypy.json
 # Kaggle Data
 *.zip
 *.csv
+*ckpt
+*.gov
+*hparams.yaml
