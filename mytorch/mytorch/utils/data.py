@@ -19,4 +19,4 @@ class DataLoader:
             yield self.features[batch_indices], self.targets[batch_indices]
 
     def __len__(self):
-        return self.batch_size
+        return len(range(0, len(self.indices), self.batch_size))
