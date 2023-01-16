@@ -134,3 +134,4 @@ dmypy.json
 *ckpt
 *.gov
 *hparams.yaml
+*ubyte*
