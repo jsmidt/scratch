@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-#from functional import mse_loss
+# from functional import mse_loss
 import matplotlib.pyplot as plt
 
 
@@ -11,82 +11,59 @@ def mse_loss(input, target):
 class Trainer:
     '''Pytorch Lightning like trainer class'''
 
-    def __init__(self, learning_rate=0.001):
+    def __init__(self, max_epochs=100):
 
-        self.learning_rate = learning_rate
-        #self.fig = None
-        self.fig = plt.figure()
-        self.axes = plt.gca()
+        # self.learning_rate = learning_rate
+        # self.fig = None
+        self.max_epochs = max_epochs
 
-    def training_step(self, params, model, x, y):
-        ''' Loss function for training set'''
-        logits = model(params, x)
-        loss = mse_loss(logits, y)
-        return loss
-
-    def validation_step(self):
-        # Loss function for validation set
-        # model.eval()
-        pass
-
-    def prediction_step(self):
-        # prediction
-        # model.eval()
-        pass
-
-    def configure_optimzers(self):
-        # optimizers to be used
-        pass
-
-    def fit(self, params, model, dataloader, max_epochs=100, log_epoch=1):
+    def fit(self, params, mymodel, dataloader, log_epoch=1):
         '''Train the model by fitting to data'''
 
-        #if self.fig is None:
+        #self.fig = plt.figure()
+        #self.axes = plt.gca()
+        optimizer = mymodel.configure_optimizers()
 
-        
         # Print loss from first batch
-        x, y = dataloader[0]
-        params, loss = self.fit_step(params, model, x, y)
-        print(f'\nEpoch ({0:>5d}/{max_epochs:5d}) train_loss = {loss.item():.5g}')
+        batch = dataloader[0]
+        params, loss = self.fit_step(params, mymodel, optimizer, batch)
+        print(
+            f'\nEpoch ({0:>5d}/{self.max_epochs:5d}) train_loss = {loss.item():.5g}')
 
         # Now train over each epoch
         n_epoch = [0]
         n_loss = [loss]
-        for epoch in range(1, max_epochs+1):
+        for epoch in range(1, self.max_epochs+1):
             eloss = []
-            for batch, (x, y) in enumerate(dataloader):
+            for step, batch in enumerate(dataloader):
 
                 # Get updated params and loss
-                params, loss = self.fit_step(params, model, x, y)
-                
+                params, loss = self.fit_step(params, mymodel, optimizer, batch)
+
                 # Track loss over epoch
                 eloss.append(loss)
-            
+
             if epoch % log_epoch == 0:
+                if step > 100000000:
+                    pass
                 n_epoch.append(epoch)
                 n_loss.append(jnp.mean(jnp.array(eloss)).item())
-                print(f'Epoch ({epoch:>5d}/{max_epochs:5d}) train_loss = {n_loss[-1]:.5g}')
-                
+                print(
+                    f'Epoch ({epoch:>5d}/{self.max_epochs:5d}) train_loss = {n_loss[-1]:.5g}')
 
         # Plot output
-        self.axes.plot(n_epoch, n_loss,'C0', label='Training, Loss')
-        self.axes.set_xlabel('Epochs')
-        self.axes.set_ylabel('Loss')
-        self.axes.legend()
+        #self.axes.plot(n_epoch, n_loss, 'C0', label='Training, Loss')
+        #self.axes.set_xlabel('Epochs')
+        #self.axes.set_ylabel('Loss')
+        #self.axes.legend()
         return params
 
-    def fit_step(self, params, model, x, y):
+    def fit_step(self, params, mymodel, optimizer, batch):
 
         # Get loss and gradients
-        loss, grads = jax.value_and_grad(self.training_step)(params, model, x, y)
+        loss, grads = jax.value_and_grad(
+            mymodel.training_step)(params, batch)
 
         # Update parameters and return
-        params = self.optimizer(params, grads)
+        params = optimizer.step(params, grads)
         return params, loss
-
-    def optimizer(self, params, grads):
-        params = jax.tree_map(
-            lambda p, g: p - self.learning_rate * g, params, grads)
-        return params
-
-

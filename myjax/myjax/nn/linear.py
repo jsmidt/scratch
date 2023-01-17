@@ -1,6 +1,7 @@
 import jax
 import jax.numpy as jnp
 
+
 class Linear:
     r"""Linear nn layer with learnable weights w and bias b. 
         The return on input data x is y = x @ w.T + b.
@@ -60,6 +61,7 @@ class Linear:
         mystr = f"Linear(in_features={self.in_features}, out_features={self.out_features}, bias={self.bias}), Total parameters: {self.num_params}"
         return mystr
 
+
 class Relu:
     r"""Applies the rectified linear unit function element-wise:
     """
@@ -76,3 +78,52 @@ class Relu:
         mystr = f"Relu(), Total parameters: {self.num_params}"
         return mystr
 
+
+class Sequential:
+    '''Sequential model'''
+
+    def __init__(self, layers) -> None:
+        self.layers = layers
+
+    # Init model with a key
+    def init(self, key):
+        '''Initialize model with a key'''
+
+        # Parameters for each later
+        params = {}
+        self.num_params = 0
+        for i, layer in enumerate(self.layers):
+            # Initialize each layer with a key
+            key, l_key = jax.random.split(key)
+            key, paramsl = layer.init(l_key)
+            params[i] = paramsl
+            # if paramsl is not None:
+            #    self.num_params += layer.num_params
+
+        # Record total number of parameters
+        self.num_params = sum([l.num_params for l in self.layers])
+
+        return key, params
+
+    # Forward routine when called
+    def __call__(self, params, x):
+        '''Evaluate model for batch x'''
+        for i, layer in enumerate(self.layers):
+            x = layer(params[i], x)
+        return x
+
+    # Print model info
+    def __repr__(self):
+        '''Model info as a string'''
+
+        # Name of model
+        mystr = f"{self.__class__.__name__}("
+
+        # List each layer
+        for i, layer in enumerate(self.layers):
+            mystr += f"\n  ({i}): {layer}, "
+        mystr += f"\n)"
+
+        # Print total parameters of model
+        mystr += f"\nTotal parameters: {self.num_params}"
+        return mystr
