@@ -136,3 +136,5 @@ dmypy.json
 *hparams.yaml
 *ubyte*
 *.pth
+
+*events.out.tf*
