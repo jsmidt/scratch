@@ -3,7 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
-from torchvision.datasets import MNIST
+from torchvision.datasets import MNIST, CIFAR10
 
 
 
@@ -14,6 +14,9 @@ from torchvision.datasets import MNIST
 #################################
 
 dataset = MNIST(root="data", download=True, transform=ToTensor())
+
+
+dataset = CIFAR10(root="data", download=True, transform=ToTensor())
 
 
 #################################
