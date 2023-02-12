@@ -141,5 +141,7 @@ dmypy.json
 *cifar-10*
 
 ILSVRC*
-d2l/data/fra-eng/_about.txt
-d2l/data/fra-eng/fra.txt
+*_about.txt
+*fra.txt
+*.model
+*.vocab
