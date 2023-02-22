@@ -145,3 +145,7 @@ ILSVRC*
 *fra.txt
 *.model
 *.vocab
+wikitext*
+*data*
+*examples*.txt
+*results*.txt
